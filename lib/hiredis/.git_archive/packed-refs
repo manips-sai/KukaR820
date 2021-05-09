@@ -1,0 +1,39 @@
+# pack-refs with: peeled fully-peeled sorted 
+3c888150a7b8963f28e98a76078f136b88ce3ced refs/remotes/origin/asyncdoc
+64da57e0c7d2c3455b517576c2798ef14d31ebb0 refs/remotes/origin/gtest
+4163e15771041492b6859983ebade02025e9f277 refs/remotes/origin/ipv6-unspec
+667dbf536524ba3f28c1d964793db1055c5a64f2 refs/remotes/origin/master
+0164332a99c9c3c49e09aa042db7dd469ac728d1 refs/remotes/origin/ng
+dfa33e60b07c13328133a16065d88d171a2a61d4 refs/remotes/origin/out-of-order-push-fix
+211580d126f4c6a7740d097c13ac70121c9695ae refs/remotes/origin/release/v1.0.0-redis-sds
+5aa2397f9ec494380774fb9155446f14ebbf3d1f refs/remotes/origin/ssl-block-timeouts
+f9717aed445547c8ab11a3a4117f648c06e62b56 refs/remotes/origin/staging
+b7b898452192be589175a2032f1d2307849f3632 refs/remotes/origin/try
+1b40ec509628c73ac272c8599a3c923e34800d54 refs/remotes/origin/trying
+00272d669b11e96b8311d9bfe167c117f8887dd6 refs/remotes/origin/unique-sds-symbols
+36f6d25e54a3900a891fc4c847265246d69e4cba refs/remotes/origin/unstable
+e7aa0b4b5244b7c8a508067b2836b3f7e7137552 refs/tags/v0.0.1
+6d026b70d0795181ae2fe3c4c96c84461b4be0b5 refs/tags/v0.10.0
+3cc6a7f29977b30feaa2ffd1b54e9a40d6b5c80b refs/tags/v0.10.1
+0fff0f182b96b4ffeee8379f29ed5129c3f72cf7 refs/tags/v0.11.0
+7b51834c165133cf6816b1991920a55bdc64ea78 refs/tags/v0.12.0
+9be3a07d8af4fae5ab3efc626bf674d9310571bb refs/tags/v0.12.1
+b55a2c4f04e5af6c3dfcf88575f72fe65f6817e8 refs/tags/v0.13.0
+^31436c33ac0cc68f288ddac6addb1f3618985c52
+18480d2e8bf1262ba06d0689f8926e7dee98249c refs/tags/v0.13.1
+^f58dd249d6ed47a7e835463c3b04722972281dbb
+20364d6359e569f11f8afa992851448fe778edd3 refs/tags/v0.13.2
+^53c32439bf89279ec62fda0bfd28ed9805b24614
+acd1966bf7f5e1be74b426272635c672def78779 refs/tags/v0.13.3
+^010756025e8cefd1bc66c6d4ed3b1648ef6f1f95
+bc05b751694bacdb21dc6f26b8b264bca0c6d024 refs/tags/v0.14.0
+^685030652cd98c5414ce554ff5b356dfe8437870
+38f01ff8af16822d1eb79566bf7355876dae8dc4 refs/tags/v0.14.1
+^f9717aed445547c8ab11a3a4117f648c06e62b56
+3be1d6e66d23ebc92a224b4d85b69ca6b110acdc refs/tags/v0.9.0
+89c6927282911372d972b952dd0dcece35b03946 refs/tags/v0.9.1
+0fbfa45f232201093de0fcfd9d6c60a3b47e9642 refs/tags/v0.9.2
+39de5267c092859b4cab4bdf79081e9634b70e39 refs/tags/v1.0.0
+^d5b4c69b7113213c1da3a0ccbfd1ee1b40443c7a
+4d3ec04c830fc5db18ff0250481fd7396e0757b6 refs/tags/v1.0.0-rc1
+^a8534675421a76f68dd175caa7f4b279dada9743
