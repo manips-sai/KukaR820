@@ -105,6 +105,7 @@ public:
 
 private:
    void setRedisInfo();  // callback to set/get data to/from redis
+   double elapsedTime(timespec start, timespec end);  // returns elapsed time
 
    double _torques[KUKA::FRI::LBRState::NUMBER_OF_JOINTS]; //!< commanded superposed torques
    CDatabaseRedisClient* redis_client;
@@ -116,6 +117,7 @@ private:
    // Timing
    std::clock_t start;
    double duration;
+   timespec _prev_time = {0, 0};
 };
 
 #endif // _KUKA_FRI_LBR_TORQUE_SINE_OVERLAY_CLIENT_H

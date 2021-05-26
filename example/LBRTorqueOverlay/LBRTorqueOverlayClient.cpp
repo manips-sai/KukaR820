@@ -179,13 +179,20 @@ void LBRTorqueOverlayClient::command()
 void LBRTorqueOverlayClient::setRedisInfo()
 {
    // get/set robot state values
-   _time = robotState().getSampleTime();
+   //  _time = robotState().getSampleTime();  // tested to be consistent 1 ms
+   timespec time;
+   time.tv_sec = robotState().getTimestampSec();
+   time.tv_nsec = robotState().getTimestampNanoSec();
+   _time = elapsedTime(_prev_time, time);  // tested to be consistent 1 ms
    memcpy(_q1, robotState().getMeasuredJointPosition(), 7 * sizeof(double));
    for (int i = 0; i < 7; i++)
    {
       _dq[i] = (_q1[i] - _q0[i]) / _time;  // finite difference joint velocities
       _q0[i] = _q1[i];  // forward update
    }
+
+   // update previous time
+   _prev_time = time;
 
    // Set values
    redis_client->setDoubleArray(JOINT_ANGLES_KEY, _q1, 7);
@@ -206,6 +213,11 @@ void LBRTorqueOverlayClient::setRedisInfo()
        _torques[i] = max_torques[i];
      }
    }
+}
+
+double LBRTorqueOverlayClient::elapsedTime(timespec start, timespec end)
+{
+	return (end.tv_sec - start.tv_sec) + 1e-9*(end.tv_nsec - start.tv_nsec);
 }
 
 // clean up additional defines
