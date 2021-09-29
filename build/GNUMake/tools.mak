@@ -26,6 +26,6 @@ CFLAGS		   = -O2 -Wall \
 					
 CXX            = g++
 
-CXXFLAGS       = $(CFLAGS)
+CXXFLAGS       = $(CFLAGS) -std=c++11
  
 LDFLAGS        = 
