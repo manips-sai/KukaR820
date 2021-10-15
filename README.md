@@ -23,7 +23,7 @@ If you want to make changes, then the procedure is to first go to the "Install" 
 
 ## Linux driver
 
-The host linux computer is configured with IP 192.170.10.200 (netmask /24, or 255.255.255.0). The KONI port has the IP 192.170.10.2/24. 
+The host linux computer is configured with IP 192.170.10.1 (netmask /24, or 255.255.255.0). The KONI port has the IP 192.170.10.3/24. Note that the KONI port IP has been changed to work with a dual arm setup. 
 
 To build the driver, first build the hiredis and jsconcpp libraries in the /lib folder. 
 - For hiredis, simply sudo make, then sudo make install
