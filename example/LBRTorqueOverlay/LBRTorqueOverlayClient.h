@@ -109,15 +109,20 @@ private:
 
    double _torques[KUKA::FRI::LBRState::NUMBER_OF_JOINTS]; //!< commanded superposed torques
    CDatabaseRedisClient* redis_client;
-   double _time;  // sample time from FRI connection
+   double _elapsed_time;  // sample time from FRI connection
    double _q0[KUKA::FRI::LBRState::NUMBER_OF_JOINTS];  // joint positions (last time)
    double _q1[KUKA::FRI::LBRState::NUMBER_OF_JOINTS];  // joint positions (current time)
-   double _dq[KUKA::FRI::LBRState::NUMBER_OF_JOINTS];  // joint velocities
+   double _dq[KUKA::FRI::LBRState::NUMBER_OF_JOINTS];  // joint velocities (filtered with 10 sample window)
+   double _dq_buffer[10][7];  // stores the past joint velocities for the moving average buffer
+   int _buffer_ind;  // tracks the moving average buffer index 
+   int _exit_counter;
+   double _kv_exit;   
 
    // Timing
-   std::clock_t start;
-   double duration;
+   // std::clock_t start;
+   // double duration;
    timespec _prev_time = {0, 0};
+   timespec _time = {0, 0};
 };
 
 #endif // _KUKA_FRI_LBR_TORQUE_SINE_OVERLAY_CLIENT_H

@@ -69,7 +69,13 @@ using namespace KUKA::FRI;
 const std::string JOINT_ANGLES_KEY = "sai2::iiwa14::sensors::q";
 const std::string JOINT_VELOCITIES_KEY = "sai2::iiwa14::sensors::dq";
 const std::string JOINT_TORQUES_COMMANDED_KEY = "sai2::iiwa14::actuators::fgc";
-const double max_torques[7] = {310, 310, 170, 170, 100, 35, 35};  // ~90% torque limits
+const double DEG2RAD = 3.1415926535897 / 180;
+const double max_torques[7] = {320 * 0.9, 320 * 0.9, 176 * 0.9, 176 * 0.9, 110 * 0.9, 40 * 0.9, 40 * 0.9};  // ~90% torque limits
+const double max_angles[7] = {170 * 0.9 * DEG2RAD, 120 * 0.9 * DEG2RAD, 170 * 0.9 * DEG2RAD, 
+                                120 * 0.9 * DEG2RAD, 170 * 0.9 * DEG2RAD, 120 * 0.9 * DEG2RAD, 175 * 0.9 * DEG2RAD};
+const double max_velocities[7] = {85 * 0.9 * DEG2RAD, 85 * 0.9 * DEG2RAD, 100 * 0.9 * DEG2RAD, 75 * 0.9 * DEG2RAD, 
+                                  130 * 0.9 * DEG2RAD, 135 * 0.9 * DEG2RAD, 135 * 0.9 * DEG2RAD};
+const double torque_offset[7] = {0, 0, 0, 0, 0, 0, 0};
 
 //******************************************************************************
 LBRTorqueOverlayClient::LBRTorqueOverlayClient()
@@ -85,6 +91,18 @@ LBRTorqueOverlayClient::LBRTorqueOverlayClient()
    redis_client->serverIs(info);
    printf("Connected to redis server\n");
 
+   // check that controller is not running
+   usleep(100000);
+   redis_client->getDoubleArray(JOINT_TORQUES_COMMANDED_KEY, _torques, 7);  
+   for(int i=0; i < 7; i++)
+   {
+    if(_torques[i] != 0)
+    {
+      std::cout << "ERROR : Stop the controller before running the driver\n" << std::endl;
+      exit(0);
+    }
+  }
+
    // Reset values
    double zero_array[7] = {};
    redis_client->setDoubleArray(JOINT_ANGLES_KEY, zero_array, 7);
@@ -92,6 +110,16 @@ LBRTorqueOverlayClient::LBRTorqueOverlayClient()
    redis_client->setDoubleArray(JOINT_TORQUES_COMMANDED_KEY, zero_array, 7);
    redis_client->setCommandIs("sai2::kuka820::driver::status", "on");
    for (int i = 0; i < 7; i++){ _torques[i] = 0.0; }
+   for (int i = 0; i < 10; i++)
+   {
+    for (int j = 0; j < 7; j++) 
+    { 
+      _dq_buffer[i][j] = 0.0; 
+    }
+   }
+   _exit_counter = 0;
+   _kv_exit = 10;  
+   _buffer_ind = 0;
 }
 
 //******************************************************************************
@@ -164,6 +192,47 @@ void LBRTorqueOverlayClient::command()
 
       robotCommand().setJointPosition(_q1);
 
+      // Check joint soft limits 
+      for (int i = 0; i < 7; i++)
+      {
+        if (abs(_q1[i]) > max_angles[i])
+        {
+          std::cout << "Soft joint angle limits exceeded at joint " << i << std::endl;
+
+          if (_exit_counter < 0)  // change to however long you want to decelerate for 
+          {
+            exit(0);
+          }
+
+          for (int j = 0; j < 7; j++)
+          {
+            _torques[j] = - _kv_exit * _dq[j];
+          }
+
+          _exit_counter--;
+
+          break;
+        }
+        else if (abs(_dq[i]) > max_velocities[i])
+        {
+          std::cout << "Soft joint velocity limits exceeded at joint " << i << std::endl;
+
+          if (_exit_counter < 0)  // change to however long you want to decelerate for 
+          {
+            exit(0);
+          }
+
+          for (int j = 0; j < 7; j++)
+          {
+            _torques[j] = - _kv_exit * _dq[j];
+          }
+
+          _exit_counter--;
+
+          break;
+        }
+      }
+
       // duration = (std::clock() - start) / (double) CLOCKS_PER_SEC;
       // start = std::clock();
       // std::cout << "Set joint position " << duration << std::endl;
@@ -180,19 +249,35 @@ void LBRTorqueOverlayClient::setRedisInfo()
 {
    // get/set robot state values
    //  _time = robotState().getSampleTime();  // tested to be consistent 1 ms
-   timespec time;
-   time.tv_sec = robotState().getTimestampSec();
-   time.tv_nsec = robotState().getTimestampNanoSec();
-   _time = elapsedTime(_prev_time, time);  // tested to be consistent 1 ms
+   // timespec time;
+   _time.tv_sec = robotState().getTimestampSec();
+   _time.tv_nsec = robotState().getTimestampNanoSec();
+   _elapsed_time = elapsedTime(_prev_time, _time);  // tested to be consistent 1 ms
    memcpy(_q1, robotState().getMeasuredJointPosition(), 7 * sizeof(double));
    for (int i = 0; i < 7; i++)
    {
-      _dq[i] = (_q1[i] - _q0[i]) / _time;  // finite difference joint velocities
+      _dq[i] = (_q1[i] - _q0[i]) / _elapsed_time;  // finite difference joint velocities
+      _dq_buffer[_buffer_ind][i] = _dq[i];  // store velocity in the buffer
       _q0[i] = _q1[i];  // forward update
+      _dq[i] = 0;  // reset for future updating 
    }
 
+   // Update velocity with buffer average
+   for (int i = 0; i < 7; i++)
+   {
+      for (int j = 0; j < 10; j++)
+      {
+        _dq[i] += 0.1 * _dq_buffer[j][i];
+      }
+   }
+
+   _buffer_ind++;
+   if (_buffer_ind == 10) {
+    _buffer_ind = 0;
+   } 
+
    // update previous time
-   _prev_time = time;
+   _prev_time = _time;
 
    // Set values
    redis_client->setDoubleArray(JOINT_ANGLES_KEY, _q1, 7);
@@ -204,9 +289,10 @@ void LBRTorqueOverlayClient::setRedisInfo()
    // Clip torques
    for (int i = 0; i < 7; i++)
    {
-     if (_torques[i] < -max_torques[i])
+     _torques[i] += torque_offset[i];
+     if (_torques[i] < - max_torques[i])
      {
-       _torques[i] = -max_torques[i];
+       _torques[i] = - max_torques[i];
      }
      else if (_torques[i] > max_torques[i])
      {
@@ -217,7 +303,7 @@ void LBRTorqueOverlayClient::setRedisInfo()
 
 double LBRTorqueOverlayClient::elapsedTime(timespec start, timespec end)
 {
-	return (end.tv_sec - start.tv_sec) + 1e-9*(end.tv_nsec - start.tv_nsec);
+	return (end.tv_sec - start.tv_sec) + 1e-9 * (end.tv_nsec - start.tv_nsec);
 }
 
 // clean up additional defines
