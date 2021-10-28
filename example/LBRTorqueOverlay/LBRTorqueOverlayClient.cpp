@@ -76,6 +76,7 @@ const double max_angles[7] = {170 * 0.9 * DEG2RAD, 120 * 0.9 * DEG2RAD, 170 * 0.
 const double max_velocities[7] = {85 * 0.9 * DEG2RAD, 85 * 0.9 * DEG2RAD, 100 * 0.9 * DEG2RAD, 75 * 0.9 * DEG2RAD, 
                                   130 * 0.9 * DEG2RAD, 135 * 0.9 * DEG2RAD, 135 * 0.9 * DEG2RAD};
 const double torque_offset[7] = {0, 0, 0, 0, 0, 0, 0};
+const double angle_offset[7] = {1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2, 1e-2};
 
 //******************************************************************************
 LBRTorqueOverlayClient::LBRTorqueOverlayClient()
@@ -169,6 +170,10 @@ void LBRTorqueOverlayClient::waitForCommand()
    if (robotState().getClientCommandMode() == TORQUE)
    {
       setRedisInfo();
+      for (int i = 0; i < 7; i++)
+      {
+        _q1[i] += angle_offset[i];
+      }
       robotCommand().setJointPosition(_q1);
       robotCommand().setTorque(_torques);
    }
@@ -190,7 +195,12 @@ void LBRTorqueOverlayClient::command()
       // start = std::clock();
       // std::cout << "Redis info " << duration << std::endl;
 
-      robotCommand().setJointPosition(_q1);
+      // needs an angle offset due to the internal friction observer 
+      for (int i = 0; i < 7; i++)
+      {
+        _q1[i] += angle_offset[i];
+      }
+      robotCommand().setJointPosition(_q1);  
 
       // Check joint soft limits 
       for (int i = 0; i < 7; i++)
